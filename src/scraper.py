@@ -28,6 +28,8 @@ def get_hot_posts(subreddit: str, limit: int = 10, sort: str = "hot") -> List[Di
 
     for item in data["data"]["children"]:
         post = item["data"]
+        if post.get("stickied", False):
+            continue
         posts.append({
             "title": post.get("title", ""),
             "selftext": post.get("selftext", ""),
