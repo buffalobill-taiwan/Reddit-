@@ -1,10 +1,20 @@
 import argparse
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
 
 import scraper
 import translator
+
+
+def sanitize_filename(name: str) -> str:
+    """Remove characters illegal for filenames."""
+    name = re.sub(r'[<>:"/\\|?*]', '', name)
+    name = name.strip()
+    if len(name) > 100:
+        name = name[:100]
+    return name
 
 
 def main():
@@ -75,51 +85,50 @@ def main():
 
     print(f"使用模型: {model}")
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    date_str = datetime.now().strftime("%Y%m%d")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True)
-
-    output_file = output_dir / f"{subreddit}_{timestamp}.md"
 
     translated_count = 0
     failed_count = 0
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(f"# r/{subreddit} 今日熱門\n\n")
-        f.write(f"*翻譯時間: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n\n")
-        f.write(f"---\n\n")
+    for i, post in enumerate(posts, 1):
+        print(f"[{i}/{len(posts)}] 翻譯: {post['title'][:50]}...")
 
-        for i, post in enumerate(posts, 1):
-            print(f"[{i}/{len(posts)}] 翻譯: {post['title'][:50]}...")
+        content = scraper.get_post_content(post)
 
-            content = scraper.get_post_content(post)
+        if not content.strip():
+            print(f"  略過空白貼文")
+            continue
 
-            if not content.strip():
-                print(f"  略過空白貼文")
-                continue
+        try:
+            translation = translator.translate(content, model=model)
 
-            try:
-                translation = translator.translate(content, model=model)
+            translated_title = translator.translate(post['title'], model=model)
+            safe_title = sanitize_filename(translated_title)
+            output_file = output_dir / f"{date_str}_{subreddit}_{safe_title}.md"
 
-                f.write(f"## {post['title']}\n\n")
+            with open(output_file, "w", encoding="utf-8") as f:
+                f.write(f"# {post['title']}\n\n")
                 f.write(f"作者: {post['author']} | 得分: {post['score']} | ")
                 f.write(f"評論數: {post['num_comments']} | ")
                 f.write(f"[原文]({post['permalink']})\n\n")
                 f.write("---\n\n")
                 f.write(translation)
-                f.write("\n\n---\n\n")
+                f.write("\n\n---\n")
+                f.write(f"\n*翻譯自 Reddit r/{subreddit}*")
 
-                translated_count += 1
+            print(f"  → {output_file.name}")
+            translated_count += 1
 
-            except Exception as e:
-                print(f"  翻譯失敗: {e}")
-                failed_count += 1
-                continue
+        except Exception as e:
+            print(f"  翻譯失敗: {e}")
+            failed_count += 1
+            continue
 
     print(f"\n完成！")
     print(f"  翻譯成功: {translated_count}")
     print(f"  翻譯失敗: {failed_count}")
-    print(f"  輸出檔案: {output_file}")
 
 
 if __name__ == "__main__":
