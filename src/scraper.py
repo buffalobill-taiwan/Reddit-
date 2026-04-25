@@ -8,7 +8,7 @@ def get_hot_posts(subreddit: str, limit: int = 10, sort: str = "hot") -> List[Di
 
     Args:
         subreddit: Subreddit name (e.g., 'nosleep')
-        limit: Number of posts to fetch (default: 10)
+        limit: Number of posts to fetch after filtering (default: 10)
         sort: Sort method - hot, new, top, rising (default: hot)
 
     Returns:
@@ -18,7 +18,7 @@ def get_hot_posts(subreddit: str, limit: int = 10, sort: str = "hot") -> List[Di
     headers = {
         "User-Agent": "redditTrans/1.0 (Python; like PRAW)"
     }
-    params = {"limit": min(max(limit, 10), 100)}
+    params = {"limit": min(max(limit + 3, 10), 100)}
 
     response = requests.get(url, headers=headers, params=params, timeout=30)
     response.raise_for_status()
@@ -30,6 +30,8 @@ def get_hot_posts(subreddit: str, limit: int = 10, sort: str = "hot") -> List[Di
         post = item["data"]
         if post.get("stickied", False):
             continue
+        if len(posts) >= limit:
+            break
         posts.append({
             "title": post.get("title", ""),
             "selftext": post.get("selftext", ""),
