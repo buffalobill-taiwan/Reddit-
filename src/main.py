@@ -92,25 +92,32 @@ def main():
 
     translated_count = 0
     failed_count = 0
+    title_index = {}
 
     for i, post in enumerate(posts, 1):
         print(f"[{i}/{len(posts)}] 翻譯: {post['title'][:50]}...")
 
-        content = scraper.get_post_content(post)
+        title, content = scraper.get_post_title_and_content(post)
 
         if not content.strip():
             print(f"  略過空白貼文")
             continue
 
         try:
+            translated_title = translator.translate(title, model=model)
             translation = translator.translate(content, model=model)
 
-            translated_title = translator.translate(post['title'], model=model)
             safe_title = sanitize_filename(translated_title)
+            if safe_title in title_index:
+                title_index[safe_title] += 1
+                safe_title = f"{safe_title}_{title_index[safe_title]}"
+            else:
+                title_index[safe_title] = 0
             output_file = output_dir / f"{date_str}_{subreddit}_{safe_title}.md"
 
             with open(output_file, "w", encoding="utf-8") as f:
-                f.write(f"# {post['title']}\n\n")
+                f.write(f"# {translated_title}\n\n")
+                f.write(f"原文標題: {title}\n\n")
                 f.write(f"作者: {post['author']} | 得分: {post['score']} | ")
                 f.write(f"評論數: {post['num_comments']} | ")
                 f.write(f"[原文]({post['permalink']})\n\n")

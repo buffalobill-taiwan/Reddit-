@@ -2,15 +2,6 @@ import ollama
 from typing import Optional
 
 
-TRANSLATION_PROMPT = """Translate the following text from English to Traditional Chinese (Taiwan).
-You are a translator specialized in horror stories.
-Must preserve:
-- The scary atmosphere and emotion
-- The tight pacing of the story
-- Conversational dialogue style
-Only output the translation result, no explanation."""
-
-
 MODELS = [
     "translategemma:4b",
     "gemma4:26b",
@@ -20,11 +11,13 @@ MODELS = [
     "gemma3:4b",
 ]
 
+TRANSLATION_PREFIX = "Translate to Traditional Chinese (Taiwan). Only output the translation, no explanation. Preserve horror atmosphere: "
+
 
 def translate(
     text: str,
     model: Optional[str] = None,
-    system_prompt: str = TRANSLATION_PROMPT,
+    prefix: str = TRANSLATION_PREFIX,
 ) -> str:
     """
     Translate text to Traditional Chinese using Ollama.
@@ -32,7 +25,7 @@ def translate(
     Args:
         text: Text to translate
         model: Model to use (auto-fallback if not specified)
-        system_prompt: System prompt for translation
+        prefix: Prompt prefix for translation
 
     Returns:
         Translated text in Traditional Chinese
@@ -44,8 +37,7 @@ def translate(
         response = ollama.chat(
             model=model,
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text},
+                {"role": "user", "content": prefix + text},
             ],
         )
         return response["message"]["content"]
@@ -53,7 +45,7 @@ def translate(
         if "not found" in str(e).lower():
             fallback_model = find_available_model(exclude=model)
             if fallback_model:
-                return translate(text, model=fallback_model, system_prompt=system_prompt)
+                return translate(text, model=fallback_model, prefix=prefix)
         raise
 
 
