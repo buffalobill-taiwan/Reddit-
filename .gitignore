@@ -1,8 +1,8 @@
 __pycache__/
 *.pyc
 *.pyo
-output/
 .env
 .venv
+.sh
 venv/
 *.egg-info/

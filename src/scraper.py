@@ -18,7 +18,7 @@ def get_hot_posts(subreddit: str, limit: int = 10, sort: str = "hot") -> List[Di
     headers = {
         "User-Agent": "redditTrans/1.0 (Python; like PRAW)"
     }
-    params = {"limit": min(limit, 100)}
+    params = {"limit": min(max(limit, 10), 100)}
 
     response = requests.get(url, headers=headers, params=params, timeout=30)
     response.raise_for_status()

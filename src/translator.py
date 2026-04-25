@@ -2,15 +2,17 @@ import ollama
 from typing import Optional
 
 
-TRANSLATION_PROMPT = """你是一個專業翻譯師，擅長翻譯恐怖故事。請將以下Reddit貼文翻譯成正體中文，
-必須保留：
-- 原文的驚悚氛圍和情緒
-- 故事的緊湊節奏
-- 對話的口語化表達
-只輸出翻譯結果，不要解釋。"""
+TRANSLATION_PROMPT = """Translate the following text from English to Traditional Chinese (Taiwan).
+You are a translator specialized in horror stories.
+Must preserve:
+- The scary atmosphere and emotion
+- The tight pacing of the story
+- Conversational dialogue style
+Only output the translation result, no explanation."""
 
 
 MODELS = [
+    "translategemma:4b",
     "gemma4:26b",
     "gemma4:14b",
     "gemma4:2b",
