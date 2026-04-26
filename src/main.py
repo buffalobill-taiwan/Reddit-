@@ -86,6 +86,9 @@ def main():
 
     print(f"使用模型: {model}")
 
+    prefix = translator.get_prefix(subreddit)
+    print(f"使用 prompt: {prefix[:30]}...")
+
     date_str = datetime.now().strftime("%Y%m%d")
     output_dir = Path(args.output_dir)
     output_dir.mkdir(exist_ok=True)
@@ -104,8 +107,8 @@ def main():
             continue
 
         try:
-            translated_title = translator.translate(title, model=model)
-            translation = translator.translate(content, model=model)
+            translated_title = translator.translate(title, model=model, prefix=prefix)
+            translation = translator.translate(content, model=model, prefix=prefix)
 
             safe_title = sanitize_filename(translated_title)
             if safe_title in title_index:

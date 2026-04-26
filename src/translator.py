@@ -12,6 +12,21 @@ MODELS = [
     "gemma3:4b",
 ]
 
+SUBREDDIT_PROMPTS = {
+    "tifu": "翻譯成正體中文。只輸出翻譯結果。保留原文的幽默風趣和口語化表達。請原文的「TIFU」不要翻譯，保留英文。",
+    "nosleep": "翻譯成正體中文。只輸出翻譯結果。保留恐怖氛圍和緊湊節奏。",
+    "shortscarystories": "翻譯成正體中文。只輸出翻譯結果。保留驚悚氛圍。",
+}
+
+DEFAULT_PREFIX = "翻譯成正體中文。只輸出翻譯結果，保留原文風格和語氣。"
+
+
+def get_prefix(subreddit: str) -> str:
+    """Get translation prefix for a subreddit."""
+    normalized = subreddit.lower().strip("/")
+    return SUBREDDIT_PROMPTS.get(normalized, DEFAULT_PREFIX)
+
+
 TRANSLATION_PREFIX = "Translate to Traditional Chinese (Taiwan). Only output the translation, no explanation. Preserve horror atmosphere: "
 
 
