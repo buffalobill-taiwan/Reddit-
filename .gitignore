@@ -6,3 +6,5 @@ __pycache__/
 .sh
 venv/
 *.egg-info/
+cron.log
+translate.sh*
