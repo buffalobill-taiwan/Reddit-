@@ -3,6 +3,7 @@ from typing import Optional
 
 
 MODELS = [
+    "translategemma:12b",
     "translategemma:4b",
     "gemma4:26b",
     "gemma4:14b",
