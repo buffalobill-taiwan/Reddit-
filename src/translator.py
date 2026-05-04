@@ -55,6 +55,12 @@ def translate(
             messages=[
                 {"role": "user", "content": prefix + text},
             ],
+            options={
+                "num_predict": 2048,
+                "temperature": 0.3,
+                "repeat_penalty": 1.2,
+                "top_p": 0.9,
+            }
         )
         return response["message"]["content"]
     except ollama.ResponseError as e:
