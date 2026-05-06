@@ -50,13 +50,20 @@ def translate(
         model = find_available_model()
 
     try:
+        # 動態調整 num_predict：根據原文長度估算所需 tokens
+        # 中文約 1.5 tokens/字，設定為估算值的 1.5 倍
+        estimated_tokens = int(len(text) * 1.5)
+        num_predict = max(2048, int(estimated_tokens * 1.5))
+        # 不超過 8192 tokens
+        num_predict = min(num_predict, 8192)
+        
         response = ollama.chat(
             model=model,
             messages=[
                 {"role": "user", "content": prefix + text},
             ],
             options={
-                "num_predict": 2048,
+                "num_predict": num_predict,
                 "temperature": 0.3,
                 "repeat_penalty": 1.2,
                 "top_p": 0.9,
