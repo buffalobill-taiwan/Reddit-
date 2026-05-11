@@ -3,9 +3,9 @@ from typing import Optional
 
 
 MODELS = [
+    "gemma4:26b",
     "translategemma:12b",
     "translategemma:4b",
-    "gemma4:26b",
     "gemma4:14b",
     "gemma4:2b",
     "gemma3:12b",
@@ -69,7 +69,13 @@ def translate(
                 "top_p": 0.9,
             }
         )
-        return response["message"]["content"]
+        content = response["message"]["content"]
+        if not content.strip():
+            fallback_model = find_available_model(exclude=model)
+            if fallback_model:
+                return translate(text, model=fallback_model, prefix=prefix)
+            raise RuntimeError(f"Model {model} returned empty output and no fallback available")
+        return content
     except ollama.ResponseError as e:
         if "not found" in str(e).lower():
             fallback_model = find_available_model(exclude=model)
