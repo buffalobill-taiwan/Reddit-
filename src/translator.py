@@ -60,7 +60,8 @@ def translate(
         response = ollama.chat(
             model=model,
             messages=[
-                {"role": "user", "content": prefix + text},
+                {"role": "system", "content": prefix},
+                {"role": "user", "content": text},
             ],
             options={
                 "num_predict": num_predict,
