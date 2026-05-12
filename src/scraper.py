@@ -51,7 +51,7 @@ def get_post_title_and_content(post: Dict) -> tuple:
     """Return (title, content) for separate translation."""
     content = post.get("selftext", "")
     if content:
-        return (post["title"], f"{post['title']}\n\n{content}")
+        return (post["title"], f"{content}")
     return (post["title"], post["title"])
 
 
