@@ -1,3 +1,4 @@
+import time
 import ollama
 from typing import Optional
 
@@ -92,6 +93,31 @@ def _translate_chunked(text: str, model: str, prefix: str) -> str:
     return '\n\n'.join(results)
 
 
+def _invoke(text: str, model: str, prefix: str) -> str:
+    """Make a single Ollama chat call and return the response content."""
+    estimated_tokens = int(len(text) * 1.5)
+    num_predict = max(2048, int(estimated_tokens * 1.5))
+    num_predict = min(num_predict, 8192)
+
+    response = ollama.chat(
+        model=model,
+        messages=[
+            {"role": "system", "content": prefix},
+            {"role": "user", "content": text},
+        ],
+        options={
+            "num_predict": num_predict,
+            "temperature": 0.3,
+            "repeat_penalty": 1.2,
+            "top_p": 0.9,
+        }
+    )
+    content = response["message"]["content"]
+    if not content.strip():
+        raise RuntimeError(f"Model {model} returned empty output")
+    return content
+
+
 def _translate_single(
     text: str,
     model: str,
@@ -99,37 +125,20 @@ def _translate_single(
     reference: Optional[str] = None,
 ) -> str:
     """Translate a single chunk of text to Traditional Chinese using Ollama."""
-    estimated_tokens = int(len(text) * 1.5)
-    num_predict = max(2048, int(estimated_tokens * 1.5))
-    num_predict = min(num_predict, 8192)
-
     user_content = text
     if reference:
         user_content = f"{reference}\n\n---\n\n{text}"
 
     try:
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": prefix},
-                {"role": "user", "content": user_content},
-            ],
-            options={
-                "num_predict": num_predict,
-                "temperature": 0.3,
-                "repeat_penalty": 1.2,
-                "top_p": 0.9,
-            }
-        )
-        content = response["message"]["content"]
-        if not content.strip():
-            fallback_model = find_available_model(exclude=model)
-            if fallback_model:
-                return _translate_single(text, model=fallback_model, prefix=prefix, reference=reference)
-            raise RuntimeError(f"Model {model} returned empty output and no fallback available")
-        return content
-    except ollama.ResponseError as e:
-        if "not found" in str(e).lower():
+        return _invoke(user_content, model, prefix)
+    except (ollama.ResponseError, RuntimeError) as e:
+        if isinstance(e, ollama.ResponseError) and e.status_code == 500:
+            time.sleep(3)
+            try:
+                return _invoke(user_content, model, prefix)
+            except (ollama.ResponseError, RuntimeError):
+                pass
+        if isinstance(e, RuntimeError) or "not found" in str(e).lower() or getattr(e, "status_code", None) == 500:
             fallback_model = find_available_model(exclude=model)
             if fallback_model:
                 return _translate_single(text, model=fallback_model, prefix=prefix, reference=reference)
